@@ -1,0 +1,162 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: DynamoDB table for the signatures
+
+Parameters:
+  TableName:
+    Type: String
+  PrivateKeyId:
+    Type: String
+  FunctionName:
+    Type: String
+  RoleName:
+    Type: String
+  BucketName:
+    Type: String
+  PolicyName:
+    Type: String
+ 
+Resources:
+  MyS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  MyDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TableName
+      AttributeDefinitions:
+        - AttributeName: commonName
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: commonName
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref RoleName
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: !Ref PolicyName
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${BucketName}
+                  - !Sub arn:aws:s3:::${BucketName}/*
+
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: !GetAtt MyDynamoDBTable.Arn
+
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Resource: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${PrivateKeyId}*
+
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Runtime: nodejs22.x
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          PRIVATE_KEY_ID: !Ref PrivateKeyId
+          TABLE_NAME: !Ref TableName
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            console.log("Received event:", JSON.stringify(event, null, 2));
+            return {
+              statusCode: 200,
+              body: JSON.stringify({ message: "Placeholder handler before deploy" }),
+            };
+          };
+
+  LambdaVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref MyLambdaFunction
+
+  LambdaAlias:
+    Type: AWS::Lambda::Alias
+    Properties:
+      Name: latest
+      FunctionName: !Ref MyLambdaFunction
+      FunctionVersion: !GetAtt LambdaVersion.Version
+
+  LambdaFunctionUrl:
+    Type: AWS::Lambda::Url
+    DependsOn: LambdaAlias
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !Ref MyLambdaFunction
+      Qualifier: latest
+
+  LambdaFunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn: LambdaAlias
+    Properties:
+      FunctionName: !Sub "${MyLambdaFunction.Arn}:latest"
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
+      FunctionUrlAuthType: NONE
+
+Outputs:
+  BucketName:
+    Description: Name of the S3 bucket
+    Value: !Ref MyS3Bucket
+  TableName:
+    Description: DynamoDB table name
+    Value: !Ref MyDynamoDBTable
+  LambdaRoleArn:
+    Description: ARN of the IAM role to be used by Lambda
+    Value: !GetAtt LambdaExecutionRole.Arn
+  LambdaFunctionName:
+    Description: Name of the Lambda function
+    Value: !Ref MyLambdaFunction
+  PublicFunctionUrl:
+    Description: Public URL
+    Value: !GetAtt LambdaFunctionUrl.FunctionUrl

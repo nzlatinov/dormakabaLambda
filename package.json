@@ -1,0 +1,41 @@
+{
+  "name": "dorma-kaba-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "node ./build.js",
+    "local": "ts-node src/runLocal.ts",
+    "local:ts": "ts-node src/index.ts",
+    "lint": "eslint",
+    "deploy": "npm run deploy:stack && npm run deploy:version",
+    "deploy:stack": "sh ./deploy/createStack.sh",
+    "deploy:version": "npm i && npm run build && sh ./deploy/publishVersion.sh",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "jest --testRegex '.*\\.unit\\.test\\.ts$'",
+    "test:integration": "DOTENV_CONFIG_PATH=.env jest ./src/index.integration.test.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.848.0",
+    "@aws-sdk/client-s3": "^3.846.0",
+    "@aws-sdk/client-secrets-manager": "^3.848.0",
+    "@aws-sdk/util-dynamodb": "^3.848.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.31.0",
+    "@eslint/json": "^0.13.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.15",
+    "dotenv": "^17.2.0",
+    "esbuild": "^0.25.8",
+    "eslint": "^9.31.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.37.0"
+  }
+}
