@@ -6,7 +6,6 @@
   "scripts": {
     "build": "node ./build.js",
     "local": "ts-node src/runLocal.ts",
-    "local:ts": "ts-node src/index.ts",
     "lint": "eslint",
     "deploy": "npm run deploy:stack && npm run deploy:version",
     "deploy:stack": "sh ./deploy/createStack.sh",

@@ -1,4 +1,3 @@
-// todo: environment variables
 export const region = process.env.REGION || ''
 export const privateKeyId = process.env.PRIVATE_KEY_ID || ''
 export const signaturesTableName = process.env.TABLE_NAME || ''

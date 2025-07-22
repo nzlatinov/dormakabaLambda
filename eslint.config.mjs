@@ -2,11 +2,10 @@ import js from "@eslint/js";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 import json from "@eslint/json";
-import { defineConfig, globalIgnores } from "eslint/config";
-
+import { defineConfig } from "eslint/config";
 
 export default defineConfig([
-  globalIgnores([".config/*", "**/node_modules/", ".git/", "**/package-lock.json"]),
+  { ignores: ["./dist/", "./node_modules/", "package-lock.json", "build.js", "jest.config.js", "jest.setup.js"] },
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], plugins: { js }, extends: ["js/recommended"] },
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], languageOptions: { globals: globals.node } },
   tseslint.configs.recommended,

@@ -1,8 +1,7 @@
 import { getPersistSignature, PersistFunction } from "./dynamoDB";
 import { AttributeValue } from "@aws-sdk/client-dynamodb";
 
-
-const dbMock: { [key: string]: any[] } = {
+const dbMock: { [key: string]: Record<string, AttributeValue>[] } = {
     nice: []
 }
 
@@ -15,8 +14,8 @@ const putItemToDynamoDbMock: PersistFunction = async (TableName: string, Item: R
     dbMock[TableName].push(Item)
 }
 
-
 describe('The getPersistSignature function creates function that ', () => {
+
     it('should persists signature to db', async () => {
         const persistSignature = getPersistSignature(putItemToDynamoDbMock, 'nice')
         const length = dbMock.nice.length

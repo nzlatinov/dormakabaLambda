@@ -1,6 +1,5 @@
 import { formatPrivateKey } from "./strings"
 
-
 describe('formatPrivateKey', () => {
 
     it('should attach first and last line to key value', async () => {
@@ -12,7 +11,6 @@ describe('formatPrivateKey', () => {
 
         expect(result).toMatch(new RegExp(`^${firsLine}`));
         expect(result).toMatch(new RegExp(`${lastLine}$`));
-
         expect(result).toBe(expected);
     })
 })

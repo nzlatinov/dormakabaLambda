@@ -2,12 +2,12 @@ import { DeleteItemCommand, DynamoDBClient, GetItemCommand } from "@aws-sdk/clie
 import { handler } from ".";
 import { region, RESPONSE_OK, signaturesTableName } from "./constants";
 import { marshall } from "@aws-sdk/util-dynamodb";
+
 jest
     .useFakeTimers()
     .setSystemTime(new Date());
 
 const dynamoClient = new DynamoDBClient({ region });
-console.log(process.env.REGION)
 
 describe('Lambda Integration Test', () => {
     it('should write signature to DB and return "OK" 200 response for happy path', async () => {

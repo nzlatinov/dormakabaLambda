@@ -37,7 +37,7 @@ export const getHandlerFunction = (aws: AWSService) => async (event: Event): Pro
         try {
             certificate = await aws.getCertificate(bucket, key)
         } catch (e) {
-
+            console.log(e)
             return RESPONSE_BAD_REQUEST
         }
 
@@ -45,6 +45,7 @@ export const getHandlerFunction = (aws: AWSService) => async (event: Event): Pro
         try {
             certificateData = extractCertificate(certificate)
         } catch (e) {
+            console.log(e)
 
             return RESPONSE_UNPROCESSABLE_ENTITY
         }

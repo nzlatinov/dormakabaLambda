@@ -1,10 +1,13 @@
-import { certificateFixture, certificateNoCommonNameFixture, publicKeyFixture } from "../../fixtures"
+import {
+    certificateFixture,
+    certificateNoCommonNameFixture,
+    publicKeyFixture
+} from "../../fixtures"
 import { extractCertificate } from "./extract"
 
 describe('The extract function ', () => {
 
     it('should extract data from a valid certificate', async () => {
-
         const result = extractCertificate(certificateFixture)
 
         expect(result).toHaveProperty('commonName')
@@ -15,8 +18,7 @@ describe('The extract function ', () => {
     })
 
     it('should throw when the certificate is not valid', async () => {
-        let logSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
-
+        const logSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
         const temeperedCertificate = certificateFixture.slice(0, 100) + certificateFixture.slice(200, certificateFixture.length)
 
         const invoke = () => extractCertificate(temeperedCertificate)
@@ -27,7 +29,7 @@ describe('The extract function ', () => {
     })
 
     it('should throw when the certificate has no CommonName', async () => {
-        let logSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+        const logSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
 
         const invoke = () => extractCertificate(certificateNoCommonNameFixture)
 

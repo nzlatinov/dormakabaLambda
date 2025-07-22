@@ -10,7 +10,7 @@ const readFileResponseMock: GetObjectCommandOutput = {
 
 const readS3FileMock: ReadS3FileFunction = async (buck: string, key: string) => {
     if (buck === 'badBucket') {
-        throw new Error('could not find bucket')
+        throw new Error(`could not find ${buck}/${key}`)
     }
 
     return readFileResponseMock
@@ -36,7 +36,7 @@ describe('The getCertificate function ', () => {
     })
 
     it('should throw if file is empty', async () => {
-        let outputSpy = jest.spyOn(readFileResponseMock.Body!, 'transformToString')
+        const outputSpy = jest.spyOn(readFileResponseMock.Body!, 'transformToString')
             .mockImplementation(async () => '');
 
         const getCertificate = createGetCertificate(readS3FileMock)

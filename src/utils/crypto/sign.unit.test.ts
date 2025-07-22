@@ -16,6 +16,4 @@ describe('The sign function ', () => {
 
         expect(invoke).toThrow()
     })
-
-
 })

@@ -1,6 +1,11 @@
 
 import { getHandlerFunction, Event, Response } from "./index"
-import { RESPONSE_BAD_REQUEST, RESPONSE_OK, RESPONSE_SERVER_ERROR, RESPONSE_UNPROCESSABLE_ENTITY } from "./constants";
+import {
+    RESPONSE_BAD_REQUEST,
+    RESPONSE_OK,
+    RESPONSE_SERVER_ERROR,
+    RESPONSE_UNPROCESSABLE_ENTITY
+} from "./constants";
 import { certificateFixture, privateKeySecretFixture } from "./fixtures";
 
 export const getAWSMock = () => ({

@@ -15,6 +15,7 @@ export const sign = (payload: string, keyData: string) => {
 }
 
 // if I was generating key instead of secret to use in sign()
+// (as I understand the requirement was)
 
 // const generateKeyPairAsync = promisify(generateKeyPair);
 
