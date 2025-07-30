@@ -52,3 +52,39 @@ With existing public bucket: https://ausagtm6ewapztua6m6fqgwzye0uqnkz.lambda-url
 With bucket from deploy script: https://ausagtm6ewapztua6m6fqgwzye0uqnkz.lambda-url.eu-north-1.on.aws/?bucket=dormakaba-test-nikola&&key=cert.pem
 
 ---
+
+
+
+
+
+Prior Information
+In order to carry out the tasks, you should have a minimal node.js setup ready in your local environment. 
+No AWS or any external account/setup is necessary.
+
+In the task, you will be asked to write/run node.js scripts locally using Javascript or Typescript.
+Task - Testing language/library usage & research with little AWS knowledge
+Write a node.js script (that will run on AWS Lambda):
+    • Reading an x509 Certificate(that is in PEM format) from S3(doesn't matter where in S3)
+    • Extracts public key from the certificate
+    • Extracts the CommonName from the certificate subject
+    • Generates a private key using RSA algorithm
+    • Signs the Public Key you have extracted with the private key you have generated
+    • Writes the encrypted content to DynamoDB with Hash Key equals CommonName
+    • Write tests to cover the functionality
+Bonus (if you finish earlier than expected):
+    • Write README explaining how to run this locally
+    • Write CloudFormation template for creating S3 and DynamoDB needed for this script.
+    • Write IAM Policy template with min requirements for accessing s3 and DynamoDB.
+    • Extra Bonus: use ECC algorithm instead of RSA
+Remarks:
+    • Make sure node.js script is tailored for lambda with valid handler function for triggering
+    • You can use any library in node.js for certificates and for AWS clients
+    • Script, templates, policies won't need to be deployable or executable right away. Just the content is important. They don't need to be working really on AWS or be perfect
+    • Both Javascript and Typescript are accepted
+    • Commit index.js/ts and other files into a public GitHub repo. 
+    • Feel free to improvise or make assumptions if you feel stuck.
+Reviewing/Expectation:
+    • The goal of the task is not to come up with something perfectly working or production-ready. 
+    • The important points are 
+        ◦ If you could find the required libraries and read their documentation to find out the required functions to solve your problem
+        ◦ If you can search and understand the basic concepts of what is unknown to you
