@@ -1,6 +1,3 @@
-import * as dotenv from "dotenv"
-dotenv.config()
-
 import { aws, AWSService } from "./utils/aws/index"
 import { extractCertificate } from "./utils/crypto/extract"
 import { sign } from "./utils/crypto/sign"
@@ -22,7 +19,6 @@ export interface Response {
     statusCode: number,
     body: string
 }
-
 
 export const getHandlerFunction = (aws: AWSService) => async (event: Event): Promise<Response> => {
 

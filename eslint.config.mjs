@@ -5,7 +5,7 @@ import json from "@eslint/json";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
-  { ignores: ["./dist/", "./node_modules/", "package-lock.json", "build.js", "jest.config.js", "jest.setup.js"] },
+  { ignores: ["./dist/", "./node_modules/", "package-lock.json", "build.js", "jest.config.js"] },
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], plugins: { js }, extends: ["js/recommended"] },
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], languageOptions: { globals: globals.node } },
   tseslint.configs.recommended,
