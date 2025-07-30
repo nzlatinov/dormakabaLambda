@@ -1,49 +1,48 @@
-import { getPersistSignature, PersistFunction } from "./dynamoDB";
-import { AttributeValue } from "@aws-sdk/client-dynamodb";
+import { getDynamoDBService } from "./dynamoDB";
+import { createSignedKeyEntry } from "../../models/signedKey";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 
-const dbMock: { [key: string]: Record<string, AttributeValue>[] } = {
-    nice: []
-}
+describe('The dynamoDBService', () => {
+    describe('putItem', () => {
 
-const putItemToDynamoDbMock: PersistFunction = async (TableName: string, Item: Record<string, AttributeValue>) => {
-    if (TableName !== 'nice') {
+        it('should persist signature to db', async () => {
+            const entry = createSignedKeyEntry('localhost', 'signedKeyValue')
+            const clientMock = {
+                send: jest.fn()
+            } as unknown as DynamoDBClient
+            const putItem = getDynamoDBService(clientMock).putItem
 
-        throw new Error('could not write to DB')
-    }
+            await putItem('nice', entry)
 
-    dbMock[TableName].push(Item)
-}
+            expect(clientMock.send).toHaveBeenCalledTimes(1)
+        })
 
-describe('The getPersistSignature function creates function that ', () => {
+        it('should persists data in correct format', async () => {
+            const entry = createSignedKeyEntry('localhost', 'signedKeyValue')
+            const clientMock = {
+                send: jest.fn()
+            } as any
+            const putItem = getDynamoDBService(clientMock).putItem
+            await putItem('nice', entry)
 
-    it('should persists signature to db', async () => {
-        const persistSignature = getPersistSignature(putItemToDynamoDbMock, 'nice')
-        const length = dbMock.nice.length
+            const input = await clientMock.send.mock.calls[0][0].input
 
-        await persistSignature('localhost', 'signedKeyValue')
+            expect(input.TableName).toBe('nice')
+            expect(input.Item.commonName.S).toBe('localhost')
+            expect(input.Item.signedKey.S).toBe('signedKeyValue')
+            expect(input.Item.timestamp.N).not.toBeNaN()
+        })
 
-        expect(dbMock['nice'].length).toBe(length + 1)
-    })
+        it('should throw an error if not able to persist', async () => {
+            const entry = createSignedKeyEntry('localhost', 'signedKeyValue')
+            const clientMock = {
+                send: () => { throw new Error() }
+            } as unknown as DynamoDBClient
+            const putItem = getDynamoDBService(clientMock).putItem
 
-    it('should persists data in correct format', async () => {
-        const persistSignature = getPersistSignature(putItemToDynamoDbMock, 'nice')
-        const length = dbMock.nice.length
-        const expected = {
-            commonName: { S: 'localhost' },
-            signedKey: { S: 'signedKeyValue' },
-        }
+            const invoke = () => putItem('nice', entry)
 
-        await persistSignature('localhost', 'signedKeyValue')
-
-        expect(dbMock['nice'][length]).toMatchObject(expected)
-        expect(Number(dbMock['nice'][length].timestamp.N)).not.toBeNaN()
-    })
-
-    it('should throw an error if not able to persist', async () => {
-        const persistSignature = getPersistSignature(putItemToDynamoDbMock, 'badTableName')
-
-        const invoke = () => persistSignature('localhost', 'signedKeyValue')
-
-        await expect(invoke).rejects.toThrow()
+            await expect(invoke).rejects.toThrow()
+        })
     })
 })

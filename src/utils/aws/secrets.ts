@@ -1,16 +1,14 @@
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
-import { privateKeyId, region } from "../../constants";
-
-interface ParsedSecret {
-  [key: string]: string
+type ParsedSecret = Record<string, string>
+export interface SecretsService {
+  getSecret: (id: string) => Promise<ParsedSecret>
 }
 
-const client = new SecretsManagerClient({ region });
+export const getSecretsService = (client: SecretsManagerClient) => ({
+  getSecret: getSecret(client)
+})
 
-export const getPrivateKeySecret = async () =>
-  Object.values((await getSecret(privateKeyId)))[0];
-
-const getSecret = async (id: string): Promise<ParsedSecret> => {
+const getSecret = (client: SecretsManagerClient) => async (id: string): Promise<ParsedSecret> => {
 
   try {
     const command = new GetSecretValueCommand({ SecretId: id });

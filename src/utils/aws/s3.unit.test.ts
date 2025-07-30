@@ -1,49 +1,48 @@
-import { GetObjectCommandOutput } from "@aws-sdk/client-s3";
+import { S3Client } from "@aws-sdk/client-s3";
 import { certificateFixture } from "../../fixtures";
-import { createGetCertificate, ReadS3FileFunction } from "./s3";
+import { getS3Service } from "./s3";
 
-const readFileResponseMock: GetObjectCommandOutput = {
-    Body: {
-        transformToString: async () => certificateFixture
-    }
-} as GetObjectCommandOutput
+describe('The s3 service ', () => {
+    describe('readFile method ', () => {
 
-const readS3FileMock: ReadS3FileFunction = async (buck: string, key: string) => {
-    if (buck === 'badBucket') {
-        throw new Error(`could not find ${buck}/${key}`)
-    }
+        it('should return certificate for correct arguments', async () => {
+            const clientMock = {
+                send: () => ({
+                    Body: {
+                        transformToString: async () => certificateFixture
+                    }
+                })
+            } as unknown as S3Client
 
-    return readFileResponseMock
-}
+            const readFile = getS3Service(clientMock).readFile
 
+            const result = await readFile('buck', 'key')
 
-describe('The getCertificate function ', () => {
+            expect(result).toBe(certificateFixture)
+        })
 
-    it('should return certificate for correct arguments', async () => {
-        const readS3FileMock = async () => readFileResponseMock
-        const getCertificate = createGetCertificate(readS3FileMock)
+        it('should throw for incorrect bucket or key', async () => {
+            const clientMock = {
+                send: () => { throw new Error() }
+            } as unknown as S3Client
 
-        const result = await getCertificate('buck', 'key')
+            const readFile = getS3Service(clientMock).readFile
 
-        expect(result).toBe(certificateFixture)
+            await expect(readFile('badBucket', 'key')).rejects.toThrow()
+        })
+
+        it('should throw if file is empty', async () => {
+            const clientMock = {
+                send: () => ({
+                    Body: {
+                        transformToString: async () => ''
+                    }
+                })
+            } as unknown as S3Client
+
+            const readFile = getS3Service(clientMock).readFile
+
+            await expect(readFile('buck', 'key')).rejects.toThrow()
+        })
     })
-
-    it('should throw for incorrect bucket or key', async () => {
-        const getCertificate = createGetCertificate(readS3FileMock)
-
-
-        await expect(getCertificate('badBucket', 'key')).rejects.toThrow()
-    })
-
-    it('should throw if file is empty', async () => {
-        const outputSpy = jest.spyOn(readFileResponseMock.Body!, 'transformToString')
-            .mockImplementation(async () => '');
-
-        const getCertificate = createGetCertificate(readS3FileMock)
-
-        await expect(getCertificate('badBucket', 'key')).rejects.toThrow()
-
-        outputSpy.mockRestore()
-    })
-
 })

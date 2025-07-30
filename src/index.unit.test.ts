@@ -9,10 +9,16 @@ import {
 import { certificateFixture, privateKeySecretFixture } from "./fixtures";
 
 export const getAWSMock = () => ({
-    getCertificate: jest.fn(),
-    persistSignature: jest.fn(),
-    getPrivateKeySecret: jest.fn()
-})
+    s3: {
+        readFile: jest.fn(),
+    },
+    dynamoDb: {
+        putItem: jest.fn()
+    },
+    secrets: {
+        getSecret: jest.fn(),
+    }
+} as any)
 
 describe('The handler function ', () => {
     let logSpy: jest.SpyInstance;
@@ -44,7 +50,7 @@ describe('The handler function ', () => {
 
     it('should return "Bad Request" if certificate could not be fetched', async () => {
         const aws = getAWSMock()
-        aws.getCertificate.mockImplementation(async () => { throw new Error('bad bucket given') })
+        aws.s3.readFile.mockImplementation(async () => { throw new Error('bad bucket given') })
 
         const handlerFunction = getHandlerFunction(aws)
         const event = { queryStringParameters: { bucket: 'some bucket', key: 'some key' } }
@@ -57,7 +63,7 @@ describe('The handler function ', () => {
 
     it('should return "Unprocessable Entity" when the certificate is in bad format', async () => {
         const aws = getAWSMock()
-        aws.getCertificate.mockReturnValue(`-----BEGIN CERTIFICATE-----
+        aws.s3.readFile.mockReturnValue(`-----BEGIN CERTIFICATE-----
         MIIDpzCCAo8CFD2nHNhR6Ss/nK2f7J33AuVEhRqhMA0GCSqGSIb3DQEBCwUAMIGP
         -----END CERTIFICATE-----`)
 
@@ -72,8 +78,8 @@ describe('The handler function ', () => {
 
     it('should return "Internal Server Error" when not able to fetch own private key', async () => {
         const aws = getAWSMock()
-        aws.getCertificate.mockReturnValue(certificateFixture)
-        aws.getPrivateKeySecret.mockRejectedValue('could not get secret')
+        aws.s3.readFile.mockReturnValue(certificateFixture)
+        aws.secrets.getSecret.mockRejectedValue('could not get secret')
 
         const handlerFunction = getHandlerFunction(aws)
         const event = { queryStringParameters: { bucket: 'some bucket', key: 'some key' } }
@@ -86,8 +92,8 @@ describe('The handler function ', () => {
 
     it('should return "Internal Server Error" when the key was fetched, but is corrupted', async () => {
         const aws = getAWSMock()
-        aws.getCertificate.mockReturnValue(certificateFixture)
-        aws.getPrivateKeySecret.mockReturnValue('not a real key')
+        aws.s3.readFile.mockReturnValue(certificateFixture)
+        aws.secrets.getSecret.mockReturnValue('not a real key')
 
         const handlerFunction = getHandlerFunction(aws)
         const event = { queryStringParameters: { bucket: 'some bucket', key: 'some key' } }
@@ -100,9 +106,9 @@ describe('The handler function ', () => {
 
     it('should return "Internal Server Error" not able to write to DB', async () => {
         const aws = getAWSMock()
-        aws.getCertificate.mockReturnValue(certificateFixture)
-        aws.getPrivateKeySecret.mockReturnValue(privateKeySecretFixture)
-        aws.persistSignature.mockRejectedValue('could not write to DB')
+        aws.s3.readFile.mockReturnValue(certificateFixture)
+        aws.secrets.getSecret.mockReturnValue(privateKeySecretFixture)
+        aws.dynamoDb.putItem.mockRejectedValue('could not write to DB')
 
         const handlerFunction = getHandlerFunction(aws)
         const event = { queryStringParameters: { bucket: 'some bucket', key: 'some key' } }
@@ -115,17 +121,15 @@ describe('The handler function ', () => {
 
     it('should return response "OK" when all is good', async () => {
         const aws = getAWSMock()
-        aws.getCertificate.mockReturnValue(certificateFixture)
-        aws.getPrivateKeySecret.mockReturnValue(privateKeySecretFixture)
-        aws.persistSignature.mockImplementation(() => { })
+        aws.s3.readFile.mockReturnValue(certificateFixture)
+        aws.secrets.getSecret.mockReturnValue({ privateKeyDKaba: privateKeySecretFixture })
+        aws.dynamoDb.putItem.mockImplementation(() => { })
 
         const handlerFunction = getHandlerFunction(aws)
         const event = { queryStringParameters: { bucket: 'some bucket', key: 'some key' } }
-
         const result: Response = await handlerFunction(event)
 
         expect(result.statusCode).toBe(RESPONSE_OK.statusCode);
         expect(result.body).toEqual(RESPONSE_OK.body);
     })
-
 })

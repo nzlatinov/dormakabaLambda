@@ -1,38 +1,34 @@
 import { S3Client, GetObjectCommand, GetObjectCommandOutput } from "@aws-sdk/client-s3";
-import { region } from "../../constants";
 
-export type ReadS3FileFunction = typeof readS3File
-
-export const createGetCertificate = (fileReader: ReadS3FileFunction) => async (bucket: string, key: string) => {
-    try {
-        const data = (await fileReader(bucket, key))
-            .Body
-            ?.transformToString();
-
-        if (!data) {
-            throw new Error(`Bad certificate file: ${data}`);
-        }
-
-        return data;
-    } catch (e) {
-        console.log(`Could not get certificate: ${e}`)
-        throw e
-    }
+export interface S3Service {
+    readFile: (bucket: string, key: string) => Promise<string>
 }
 
-async function readS3File(bucket: string, key: string): Promise<GetObjectCommandOutput> {
-    try {
-        const s3 = new S3Client({ region });
+export const getS3Service = (client: S3Client): S3Service => ({
+    readFile: getReadS3(client)
+})
+
+const getReadS3 = (client: S3Client) =>
+    async (bucket: string, key: string): Promise<string> => {
         const command = new GetObjectCommand({
             Bucket: bucket,
             Key: key,
         });
 
-        return s3.send(command)
-    } catch (e) {
-        console.log(`Could not read from S3: ${e}`)
-        throw e
-    }
-}
+        let commandOutput: GetObjectCommandOutput
 
-export const getCertificate = createGetCertificate(readS3File)
+        try {
+            commandOutput = await client.send(command)
+        } catch (e) {
+            console.log(`Could not read from S3: ${e}`)
+            throw e
+        }
+
+        const data = await commandOutput.Body?.transformToString();
+        if (!data) {
+            console.log(`Bad certificate file: ${data}`);
+            throw new Error(`Bad certificate file: ${data}`);
+        }
+
+        return data;
+    }

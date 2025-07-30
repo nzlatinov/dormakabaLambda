@@ -1,4 +1,4 @@
-import { aws, AWSService } from "./utils/aws/index"
+import { AWSService, getAWSService } from "./utils/aws/index"
 import { extractCertificate } from "./utils/crypto/extract"
 import { sign } from "./utils/crypto/sign"
 import {
@@ -6,7 +6,14 @@ import {
     RESPONSE_BAD_REQUEST,
     RESPONSE_SERVER_ERROR,
     RESPONSE_UNPROCESSABLE_ENTITY,
+    signaturesTableName,
+    region,
 } from "./constants"
+import { privateKeyId } from "../src/constants";
+import { createSignedKeyEntry } from "./models/signedKey";
+import { SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
+import { S3Client } from "@aws-sdk/client-s3";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 
 export interface Event {
     queryStringParameters: {
@@ -20,6 +27,12 @@ export interface Response {
     body: string
 }
 
+const secretsClient = new SecretsManagerClient({ region });
+const s3Client = new S3Client({ region });
+const dynamoDbClient = new DynamoDBClient({ region });
+
+const aws = getAWSService({ secretsClient, s3Client, dynamoDbClient })
+
 export const getHandlerFunction = (aws: AWSService) => async (event: Event): Promise<Response> => {
 
     try {
@@ -31,7 +44,7 @@ export const getHandlerFunction = (aws: AWSService) => async (event: Event): Pro
 
         let certificate
         try {
-            certificate = await aws.getCertificate(bucket, key)
+            certificate = await aws.s3.readFile(bucket, key)
         } catch (e) {
             console.log(e)
             return RESPONSE_BAD_REQUEST
@@ -48,11 +61,13 @@ export const getHandlerFunction = (aws: AWSService) => async (event: Event): Pro
 
         const { commonName, publicKeyPem: payload } = certificateData
 
-        const ownPrivateKey = await aws.getPrivateKeySecret()
+        const { privateKeyDKaba: ownPrivateKey } = await aws.secrets.getSecret(privateKeyId)
 
         const signed = sign(payload, ownPrivateKey)
 
-        await aws.persistSignature(commonName, signed)
+        const keyItem = createSignedKeyEntry(commonName, signed)
+
+        await aws.dynamoDb.putItem(signaturesTableName, keyItem)
 
         return RESPONSE_OK
     } catch (e) {
