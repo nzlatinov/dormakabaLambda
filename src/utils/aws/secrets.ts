@@ -1,8 +1,5 @@
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
-type ParsedSecret = Record<string, string>
-export interface SecretsService {
-  getSecret: (id: string) => Promise<ParsedSecret>
-}
+import { ParsedSecret } from "./aws.service.types";
 
 export const getSecretsService = (client: SecretsManagerClient) => ({
   getSecret: getSecret(client)
@@ -22,7 +19,7 @@ const getSecret = (client: SecretsManagerClient) => async (id: string): Promise<
 
     return parsedSecret
   } catch (e) {
-    console.log(`Failed to get secret ${id}`, e)
+    console.error(`Failed to get secret ${id}`, e)
     throw e
   }
 }

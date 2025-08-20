@@ -18,7 +18,7 @@ describe('The extract function ', () => {
     })
 
     it('should throw when the certificate is not valid', async () => {
-        const logSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+        const logSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
         const temeperedCertificate = certificateFixture.slice(0, 100) + certificateFixture.slice(200, certificateFixture.length)
 
         const invoke = () => extractCertificate(temeperedCertificate)
@@ -29,7 +29,7 @@ describe('The extract function ', () => {
     })
 
     it('should throw when the certificate has no CommonName', async () => {
-        const logSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
+        const logSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
 
         const invoke = () => extractCertificate(certificateNoCommonNameFixture)
 

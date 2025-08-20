@@ -1,11 +1,7 @@
 import { X509Certificate } from 'crypto';
+import { ICertificateData } from './crypto.types';
 
-interface CertificateData {
-    commonName: string,
-    publicKeyPem: string
-}
-
-export const extractCertificate = (certificate: string): CertificateData => {
+export const extractCertificate = (certificate: string): ICertificateData => {
 
     try {
         const certBuffer = Buffer.from(certificate)
@@ -15,7 +11,7 @@ export const extractCertificate = (certificate: string): CertificateData => {
             .subject
             .split('\n')
             .find((line) => line.startsWith('CN='))
-            ?.slice(3)
+            ?.replace('CN=', '')
 
         if (!commonName) {
             throw new Error('No commonName(CN) in certificate')
@@ -28,7 +24,7 @@ export const extractCertificate = (certificate: string): CertificateData => {
 
         return { commonName, publicKeyPem }
     } catch (e) {
-        console.log('Could not extract certificate data', { e, certificate })
+        console.error('Could not extract certificate data', { e, certificate })
         throw e
     }
 }

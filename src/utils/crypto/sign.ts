@@ -13,24 +13,3 @@ export const sign = (payload: string, keyData: string) => {
 
     return signature
 }
-
-// if I was generating key instead of secret to use in sign()
-// (as I understand the requirement was)
-
-// const generateKeyPairAsync = promisify(generateKeyPair);
-
-// const createKeyPair = async () => {
-//     const { publicKey, privateKey } = await generateKeyPairAsync('rsa', {
-//         modulusLength: 2048,
-//         publicKeyEncoding: {
-//             type: 'pkcs1',
-//             format: 'pem',
-//         },
-//         privateKeyEncoding: {
-//             type: 'pkcs1',
-//             format: 'pem',
-//         },
-//     });
-
-//     return { publicKey, privateKey }
-// }

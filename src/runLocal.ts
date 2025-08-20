@@ -1,4 +1,4 @@
-import { handler } from "./index";
+import { handler } from ".";
 
 const main = async () => {
     const res = await handler({
@@ -8,7 +8,7 @@ const main = async () => {
         }
     })
 
-    console.log(res);
+    console.error(res);
 
 }
 

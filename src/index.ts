@@ -1,6 +1,6 @@
-import { AWSService, getAWSService } from "./utils/aws/index"
-import { extractCertificate } from "./utils/crypto/extract"
-import { sign } from "./utils/crypto/sign"
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
+import { S3Client } from "@aws-sdk/client-s3";
 import {
     RESPONSE_OK,
     RESPONSE_BAD_REQUEST,
@@ -8,24 +8,14 @@ import {
     RESPONSE_UNPROCESSABLE_ENTITY,
     signaturesTableName,
     region,
+    privateKeyId,
 } from "./constants"
-import { privateKeyId } from "../src/constants";
+import { IEvent, IResponse } from "./types.ts";
+import { extractCertificate } from "./utils/crypto/extract"
+import { sign } from "./utils/crypto/sign"
+import { IAWSService } from "./utils/aws/aws.service.types";
 import { createSignedKeyEntry } from "./models/signedKey";
-import { SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
-import { S3Client } from "@aws-sdk/client-s3";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-
-export interface Event {
-    queryStringParameters: {
-        bucket?: string,
-        key?: string
-    }
-}
-
-export interface Response {
-    statusCode: number,
-    body: string
-}
+import { getAWSService } from "./utils/aws";
 
 const secretsClient = new SecretsManagerClient({ region });
 const s3Client = new S3Client({ region });
@@ -33,7 +23,7 @@ const dynamoDbClient = new DynamoDBClient({ region });
 
 const aws = getAWSService({ secretsClient, s3Client, dynamoDbClient })
 
-export const getHandlerFunction = (aws: AWSService) => async (event: Event): Promise<Response> => {
+export const getHandlerFunction = (aws: IAWSService) => async (event: IEvent): Promise<IResponse> => {
 
     try {
         const { bucket, key } = event.queryStringParameters
@@ -46,7 +36,7 @@ export const getHandlerFunction = (aws: AWSService) => async (event: Event): Pro
         try {
             certificate = await aws.s3.readFile(bucket, key)
         } catch (e) {
-            console.log(e)
+            console.error(e)
             return RESPONSE_BAD_REQUEST
         }
 
@@ -54,7 +44,7 @@ export const getHandlerFunction = (aws: AWSService) => async (event: Event): Pro
         try {
             certificateData = extractCertificate(certificate)
         } catch (e) {
-            console.log(e)
+            console.error(e)
 
             return RESPONSE_UNPROCESSABLE_ENTITY
         }
@@ -71,7 +61,7 @@ export const getHandlerFunction = (aws: AWSService) => async (event: Event): Pro
 
         return RESPONSE_OK
     } catch (e) {
-        console.log(e)
+        console.error(e)
 
         return RESPONSE_SERVER_ERROR
     }

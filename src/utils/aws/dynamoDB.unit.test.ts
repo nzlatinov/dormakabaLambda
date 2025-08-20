@@ -34,6 +34,8 @@ describe('The dynamoDBService', () => {
         })
 
         it('should throw an error if not able to persist', async () => {
+            const logSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+
             const entry = createSignedKeyEntry('localhost', 'signedKeyValue')
             const clientMock = {
                 send: () => { throw new Error() }
@@ -43,6 +45,7 @@ describe('The dynamoDBService', () => {
             const invoke = () => putItem('nice', entry)
 
             await expect(invoke).rejects.toThrow()
+            logSpy.mockRestore()
         })
     })
 })

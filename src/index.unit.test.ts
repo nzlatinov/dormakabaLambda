@@ -1,5 +1,5 @@
 
-import { getHandlerFunction, Event, Response } from "./index"
+import { getHandlerFunction } from ".";
 import {
     RESPONSE_BAD_REQUEST,
     RESPONSE_OK,
@@ -7,6 +7,7 @@ import {
     RESPONSE_UNPROCESSABLE_ENTITY
 } from "./constants";
 import { certificateFixture, privateKeySecretFixture } from "./fixtures";
+import { IEvent, IResponse } from "./types.ts";
 
 export const getAWSMock = () => ({
     s3: {
@@ -39,10 +40,10 @@ describe('The handler function ', () => {
         ${{ queryStringParameters: {} }}                        | ${'both params missing'}
         ${{ queryStringParameters: { bucket: 'some value' } }}  | ${'key missing'}
         ${{ queryStringParameters: { key: 'some value' } }}     | ${'bucket missing'}
-      `('should return "Bad Request" for $condition ', async ({ event }: { event: Event }) => {
+      `('should return "Bad Request" for $condition ', async ({ event }: { event: IEvent }) => {
         const handlerFunction = getHandlerFunction(getAWSMock())
 
-        const result: Response = await handlerFunction(event)
+        const result: IResponse = await handlerFunction(event)
 
         expect(result.statusCode).toBe(RESPONSE_BAD_REQUEST.statusCode);
         expect(result.body).toEqual(RESPONSE_BAD_REQUEST.body);
@@ -55,7 +56,7 @@ describe('The handler function ', () => {
         const handlerFunction = getHandlerFunction(aws)
         const event = { queryStringParameters: { bucket: 'some bucket', key: 'some key' } }
 
-        const result: Response = await handlerFunction(event)
+        const result: IResponse = await handlerFunction(event)
 
         expect(result.statusCode).toBe(RESPONSE_BAD_REQUEST.statusCode);
         expect(result.body).toEqual(RESPONSE_BAD_REQUEST.body);
@@ -70,7 +71,7 @@ describe('The handler function ', () => {
         const handlerFunction = getHandlerFunction(aws)
         const event = { queryStringParameters: { bucket: 'some bucket', key: 'some key' } }
 
-        const result: Response = await handlerFunction(event)
+        const result: IResponse = await handlerFunction(event)
 
         expect(result.statusCode).toBe(RESPONSE_UNPROCESSABLE_ENTITY.statusCode);
         expect(result.body).toEqual(RESPONSE_UNPROCESSABLE_ENTITY.body);
@@ -84,7 +85,7 @@ describe('The handler function ', () => {
         const handlerFunction = getHandlerFunction(aws)
         const event = { queryStringParameters: { bucket: 'some bucket', key: 'some key' } }
 
-        const result: Response = await handlerFunction(event)
+        const result: IResponse = await handlerFunction(event)
 
         expect(result.statusCode).toBe(RESPONSE_SERVER_ERROR.statusCode);
         expect(result.body).toEqual(RESPONSE_SERVER_ERROR.body);
@@ -98,7 +99,7 @@ describe('The handler function ', () => {
         const handlerFunction = getHandlerFunction(aws)
         const event = { queryStringParameters: { bucket: 'some bucket', key: 'some key' } }
 
-        const result: Response = await handlerFunction(event)
+        const result: IResponse = await handlerFunction(event)
 
         expect(result.statusCode).toBe(RESPONSE_SERVER_ERROR.statusCode);
         expect(result.body).toEqual(RESPONSE_SERVER_ERROR.body);
@@ -113,7 +114,7 @@ describe('The handler function ', () => {
         const handlerFunction = getHandlerFunction(aws)
         const event = { queryStringParameters: { bucket: 'some bucket', key: 'some key' } }
 
-        const result: Response = await handlerFunction(event)
+        const result: IResponse = await handlerFunction(event)
 
         expect(result.statusCode).toBe(RESPONSE_SERVER_ERROR.statusCode);
         expect(result.body).toEqual(RESPONSE_SERVER_ERROR.body);
@@ -127,7 +128,7 @@ describe('The handler function ', () => {
 
         const handlerFunction = getHandlerFunction(aws)
         const event = { queryStringParameters: { bucket: 'some bucket', key: 'some key' } }
-        const result: Response = await handlerFunction(event)
+        const result: IResponse = await handlerFunction(event)
 
         expect(result.statusCode).toBe(RESPONSE_OK.statusCode);
         expect(result.body).toEqual(RESPONSE_OK.body);

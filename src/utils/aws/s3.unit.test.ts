@@ -22,6 +22,8 @@ describe('The s3 service ', () => {
         })
 
         it('should throw for incorrect bucket or key', async () => {
+            const logSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+
             const clientMock = {
                 send: () => { throw new Error() }
             } as unknown as S3Client
@@ -29,9 +31,14 @@ describe('The s3 service ', () => {
             const readFile = getS3Service(clientMock).readFile
 
             await expect(readFile('badBucket', 'key')).rejects.toThrow()
+
+            logSpy.mockRestore()
+
         })
 
         it('should throw if file is empty', async () => {
+            const logSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+
             const clientMock = {
                 send: () => ({
                     Body: {
@@ -43,6 +50,8 @@ describe('The s3 service ', () => {
             const readFile = getS3Service(clientMock).readFile
 
             await expect(readFile('buck', 'key')).rejects.toThrow()
+            logSpy.mockRestore()
+
         })
     })
 })
